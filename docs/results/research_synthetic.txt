@@ -1,0 +1,46 @@
+ApexHFT research 0.1.0
+csv=data/synthetic_quotes.csv
+provenance=synthetic_unless_path_says_otherwise
+limitation=top-of-book snapshots cannot reconstruct queue priority or market impact
+observations=12
+threshold_reversion
+  dataset=data/synthetic_quotes.csv
+  entry_ticks=5 order_qty=1 max_abs_position=1
+  fee_ticks_per_unit=1 slippage_ticks=0
+  position=1 cash_tick_lots=-66 equity_tick_lots=31
+  gross_pnl_tick_lots=-61 net_pnl_tick_lots=31 costs_tick_lots=5
+  trades=5 filled_qty=5 submitted_qty=5 fill_rate=1
+  rejected=0 cancelled_residuals=0 max_drawdown_tick_lots=3 equity_vol=8.58858
+buy_and_hold
+  dataset=data/synthetic_quotes.csv:buy_hold
+  entry_ticks=5 order_qty=1 max_abs_position=1
+  fee_ticks_per_unit=1 slippage_ticks=0
+  position=1 cash_tick_lots=-103 equity_tick_lots=-6
+  gross_pnl_tick_lots=-102 net_pnl_tick_lots=-6 costs_tick_lots=1
+  trades=1 filled_qty=1 submitted_qty=1 fill_rate=1
+  rejected=0 cancelled_residuals=0 max_drawdown_tick_lots=21 equity_vol=13.3587
+walk_forward selected_entry_ticks=1
+walk_forward_train
+  dataset=data/synthetic_quotes.csv:train
+  entry_ticks=1 order_qty=1 max_abs_position=1
+  fee_ticks_per_unit=1 slippage_ticks=0
+  position=0 cash_tick_lots=6 equity_tick_lots=6
+  gross_pnl_tick_lots=8 net_pnl_tick_lots=6 costs_tick_lots=2
+  trades=2 filled_qty=2 submitted_qty=2 fill_rate=1
+  rejected=0 cancelled_residuals=0 max_drawdown_tick_lots=3 equity_vol=4.43847
+walk_forward_test
+  dataset=data/synthetic_quotes.csv:test
+  entry_ticks=1 order_qty=1 max_abs_position=1
+  fee_ticks_per_unit=1 slippage_ticks=0
+  position=0 cash_tick_lots=-3 equity_tick_lots=-3
+  gross_pnl_tick_lots=-1 net_pnl_tick_lots=-3 costs_tick_lots=2
+  trades=2 filled_qty=2 submitted_qty=2 fill_rate=1
+  rejected=0 cancelled_residuals=0 max_drawdown_tick_lots=3 equity_vol=0.894427
+walk_forward_buy_hold_test
+  dataset=data/synthetic_quotes.csv:buy_hold_test
+  entry_ticks=1 order_qty=1 max_abs_position=1
+  fee_ticks_per_unit=1 slippage_ticks=0
+  position=1 cash_tick_lots=-83 equity_tick_lots=14
+  gross_pnl_tick_lots=-82 net_pnl_tick_lots=14 costs_tick_lots=1
+  trades=1 filled_qty=1 submitted_qty=1 fill_rate=1
+  rejected=0 cancelled_residuals=0 max_drawdown_tick_lots=16 equity_vol=16.1926

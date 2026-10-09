@@ -1,0 +1,19 @@
+ApexHFT benchmark 0.1.0
+cpu=12th Gen Intel(R) Core(TM) i5-1235U
+os=Ubuntu 24.04.4 LTS
+compiler=gcc 13.3.0
+build_type=Release
+cxx_standard=20
+sanitizers=off
+seed=20261009
+clock=std::chrono::steady_clock
+timing=setup excluded; per-op latency from first timed rep
+limitation=per-op percentiles include clock overhead and are noisy below ~100ns
+workload=insert_empty ops=10000 setup_ops=0 warmup=1 reps=5 min_ms=0.861 median_ms=0.910 ops_per_sec=10991450.8 p50_ns=127 p95_ns=181 p99_ns=260 notes="10000 non-crossing inserts into an empty book"
+workload=insert_non_crossing_book1000 ops=5000 setup_ops=1000 warmup=1 reps=5 min_ms=0.419 median_ms=0.680 ops_per_sec=7349731.1 p50_ns=102 p95_ns=169 p99_ns=299 notes="non-crossing limit inserts at 89/111 after book at 90/110"
+workload=insert_non_crossing_book10000 ops=5000 setup_ops=10000 warmup=1 reps=5 min_ms=0.475 median_ms=0.694 ops_per_sec=7209763.8 p50_ns=143 p95_ns=208 p99_ns=3044 notes="non-crossing limit inserts at 89/111 after book at 90/110"
+workload=marketable_trades ops=10000 setup_ops=10000 warmup=1 reps=5 min_ms=0.869 median_ms=1.563 ops_per_sec=6396929.5 p50_ns=83 p95_ns=187 p99_ns=264 notes="10000 resting sells then 10000 marketable buys; timed buys only"
+workload=cancel_existing ops=5000 setup_ops=5000 warmup=1 reps=5 min_ms=7.508 median_ms=8.092 ops_per_sec=617922.9 p50_ns=1015 p95_ns=3659 p99_ns=5692 notes="cancel 5000 previously inserted resting orders"
+workload=mixed_deterministic ops=20000 setup_ops=0 warmup=1 reps=5 min_ms=4.113 median_ms=5.097 ops_per_sec=3923509.6 p50_ns=108 p95_ns=173 p99_ns=244 notes="seeded mix: 70% insert / 30% cancel of still-active orders"
+workload=market_replay ops=20000 setup_ops=0 warmup=1 reps=5 min_ms=3.251 median_ms=5.707 ops_per_sec=3504651.8 notes="20000 sequenced market events; batch timing only"
+workload=oms_replay ops=8000 setup_ops=0 warmup=1 reps=5 min_ms=2.737 median_ms=5.174 ops_per_sec=1546270.5 notes="8000 OMS commands: 2000 external+owned fills plus 2000 rest+cancel"

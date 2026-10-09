@@ -1,0 +1,19 @@
+---
+description: Engineering and safety rules for ApexHFT
+alwaysApply: true
+---
+# ApexHFT engineering rules
+
+- This is an offline C++20 trading-system simulator, not a live trading system.
+- Never connect to brokers, exchanges, or real-money accounts.
+- Never run project commands as root; verify `id -u` before implementation.
+- Make small, reviewable changes and inspect existing files before editing.
+- Preserve deterministic behavior and explicit invariants.
+- Use integer ticks and quantities where applicable; avoid floating-point prices.
+- Add tests for behavior and edge cases before claiming completion.
+- Run the relevant build and tests; report exact results honestly.
+- Never fabricate benchmark results or claim unrun tests passed.
+- Do not weaken compiler warnings or tests to hide failures.
+- Avoid network-fetched build dependencies.
+- Do not start a new phase without reviewing the previous phase.
+- Record feature status only from executed tests, sanitizers, or measured benchmarks.
