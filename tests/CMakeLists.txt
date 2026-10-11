@@ -4,6 +4,7 @@ add_executable(apexhft_tests
     test_version.cpp
     test_domain.cpp
     test_matching_engine.cpp
+    test_matching_engine_differential.cpp
     test_replay.cpp
     test_risk.cpp
     test_oms.cpp

@@ -89,3 +89,4 @@ cancels throw, matching direct OMS.
 - Quote snapshots cannot reconstruct queue priority or impact.
 - External residual liquidity can remain after an owned reject on that bar.
 - Hash iteration is not used for book order; price-time uses ordered maps.
+- Order cancellation scans FIFO deques linearly (`std::remove` in price-level `std::deque`), which is $O(L)$ where $L$ is the number of resting orders at that price. Under very large backlogs with hundreds of thousands of resting orders, cancellation overhead scales quadratically over long runs.

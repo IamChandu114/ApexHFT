@@ -20,10 +20,12 @@
 ## Phase 3 — Optimized Matching Engine
 - Optimize only after the reference implementation is correct.
 - Differential-test optimized behavior against the reference model.
-- **Status:** Verified as a correctness-preserving reference engine with
-  differential tests (`MatchingEngineTest.MatchesIndependentReferenceModel`).
-  Phase 8 later applied an evidence-backed OMS lookup change, not a second
-  matching engine.
+- **Status:** Verified. Hardened differential testing framework implemented
+  (`tests/test_matching_engine_differential.cpp`, `./scripts/run_differential.sh`),
+  validating limit-order matching, price-time priority, partial fills, resting orders,
+  and cancellations against an independent reference book. Includes deterministic
+  seeding, replayable traces, and failure diagnostics verified up to 100,000 operations.
+  Phase 8 later applied an evidence-backed OMS lookup change, not a second matching engine.
 
 ## Phase 4 — Market Data and Replay
 - Validate input records and replay events deterministically.

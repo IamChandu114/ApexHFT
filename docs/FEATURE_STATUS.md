@@ -17,7 +17,17 @@ Statuses: **Verified** | Implemented — verification pending | In progress | Pl
 - Market-order matching is not implemented.
 
 ## Phase 3 — Engine differential tests
-- **Verified.** Seeded stress plus independent reference model comparison.
+- **Verified.** Seeded stress plus independent reference model comparison
+  (`tests/test_matching_engine_differential.cpp`).
+- Completely independent reference model modeling limit order submission,
+  price-time priority, partial/complete fills, resting orders, and cancellation.
+- Operation-by-operation verification of trade reports (IDs, prices, quantities),
+  touched order state transitions, active orders, active count, best bid/ask, and
+  spread invariants (`bid < ask`).
+- Deterministic operation generation under fixed seed `0xD1FF3E71A1`.
+- Robust failure diagnostics reporting random seed, operations executed,
+  failing operation index, operation details, failure reason, and replayable trace.
+- Verified up to 100,000 operations in Release mode.
 
 ## Phase 4 — Market replay
 - **Verified.** Contiguous sequences, submit/cancel, deterministic trades
@@ -45,7 +55,7 @@ Statuses: **Verified** | Implemented — verification pending | In progress | Pl
 - **Verified.** OMS `is_own_order` was O(n) over all historical IDs and pending
   exposure scanned filled/cancelled orders. Hash-set ownership plus an active
   ID list improved `oms_replay` from **60,593.0** to **1,546,270.5** ops/s on the
-  same host/workload. Correctness: 92/92 Debug and ASan tests.
+  same host/workload. Correctness: 97/97 Debug and ASan tests.
   Comparison: `docs/results/phase8_release_optimized.txt`.
 
 ## Phase 9 — Offline research
@@ -54,10 +64,18 @@ Statuses: **Verified** | Implemented — verification pending | In progress | Pl
 - Dataset `data/synthetic_quotes.csv` is **synthetic**, not historical.
 
 ## Evidence (this environment)
-- Debug: `ctest --test-dir build --output-on-failure` → **92/92 passed**.
-- ASan/UBSan: `ctest --test-dir build-asan --output-on-failure` → **92/92 passed**.
-- `./scripts/verify.sh` rebuilds both trees and runs `git diff --check`.
-- Research repeated twice: identical SHA-256 of stdout.
+- Debug: `ctest --test-dir build --output-on-failure` → **97/97 passed** (1.02s).
+- ASan/UBSan: `ctest --test-dir build-asan --output-on-failure` → **97/97 passed** (4.41s).
+- Release: `ctest --test-dir build-release --output-on-failure` → **97/97 passed** (0.60s).
+- Differential validation (`./scripts/run_differential.sh`):
+  - 5,000 ops (CI default): 0.23s Debug, 0.05s Release — **passed**.
+  - 10,000 ops: 0.75s Debug, 0.19s Release — **passed**.
+  - 100,000 ops: 24.60s Release — **passed** (exit code 0).
+  - 1,000,000 ops: Not passed / interrupted at 20m 29s. Queue cancellation scaling in
+    `MatchingEngine::cancel` (`std::remove` over FIFO `std::deque`) causes $O(N^2)$ cumulative
+    traversals under deep resting queues.
+- `./scripts/verify.sh` rebuilds Debug + ASan and runs `git diff --check` — **passed**.
+- Research repeated: identical output and metrics.
 
 ## Out of scope
 - Live exchange/broker connectivity and real-money execution.

@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -23,4 +24,6 @@ jobs:
           sudo apt-get install -y g++ cmake ninja-build libgtest-dev
 
       - name: Run verification suite
+        env:
+          APEXHFT_DIFF_OPS: "5000"
         run: bash ./scripts/verify.sh

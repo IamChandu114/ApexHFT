@@ -10,6 +10,8 @@ connect to brokers or exchanges, or handle real-money accounts.
   priority and execution at the resting price.
 - Pre-trade risk, an order-management layer, positions, and an in-memory audit log.
 - Deterministic market replay and OMS command replay.
+- Randomized differential testing against an independent reference order book
+  with deterministic random seeds, replayable traces, and failure diagnostics.
 - A dependency-free Release benchmark harness.
 - An offline research loop over **synthetic** top-of-book quotes (threshold
   mean-reversion vs buy-and-hold, walk-forward parameter selection).
@@ -43,7 +45,7 @@ ctest --test-dir build --output-on-failure
 ./build/apexhft
 ```
 
-Verified in this tree: **92/92** tests passed.
+Verified in this tree: **97/97** tests passed.
 
 ## Sanitizer build
 
@@ -56,8 +58,24 @@ cmake --build build-asan
 ctest --test-dir build-asan --output-on-failure
 ```
 
-Verified: **92/92** tests passed. Combined gate: `./scripts/verify.sh`
+Verified: **97/97** tests passed. Combined gate: `./scripts/verify.sh`
 (also runs `git diff --check`).
+
+## Randomized differential testing
+
+An independent reference order book validates the matching engine under
+randomized streams of submit and cancel operations (seed `0xD1FF3E71A1`):
+
+```bash
+# Standard 10,000 operation validation
+APEXHFT_DIFF_OPS=10000 ./scripts/run_differential.sh
+
+# Extended validation (Release build)
+APEXHFT_DIFF_BUILD=build-release APEXHFT_DIFF_OPS=100000 ./scripts/run_differential.sh
+```
+
+Any discrepancy emits a structured failure trace containing the seed,
+operation count, failing operation index, failure reason, and a replayable sequence.
 
 ## Replay
 
