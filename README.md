@@ -1,110 +1,121 @@
 # ApexHFT
 
+[![ApexHFT CI](https://github.com/IamChandu114/ApexHFT/actions/workflows/ci.yml/badge.svg)](https://github.com/IamChandu114/ApexHFT/actions/workflows/ci.yml)
+
 A research-oriented, deterministic C++20 framework for studying tick-to-trade
 mechanics through **offline** simulation. It does not submit live orders,
 connect to brokers or exchanges, or handle real-money accounts.
 
-## What is implemented
+---
 
-- Integer price ticks and quantities; limit-order matching with price-time
-  priority and execution at the resting price.
-- Pre-trade risk, an order-management layer, positions, and an in-memory audit log.
-- Deterministic market replay and OMS command replay.
-- Randomized differential testing against an independent reference order book
-  with deterministic random seeds, replayable traces, and failure diagnostics.
-- A dependency-free Release benchmark harness.
-- An offline research loop over **synthetic** top-of-book quotes (threshold
-  mean-reversion vs buy-and-hold, walk-forward parameter selection).
+## What ApexHFT Is and What It Is Not
 
-Market-order matching, live data, and profitability are non-goals.
+- **What it is:** An offline, single-threaded, deterministic C++20 order-matching and simulation framework with price-time priority, integer arithmetic, pre-trade risk controls, order management, audit logging, deterministic event/OMS replay, differential fuzz testing against an independent reference book, and backtesting on synthetic quotes.
+- **What it is not:** A live trading platform, broker gateway, exchange connectivity layer (no FIX, ITCH, or OUCH), multi-threaded matching engine, or profitable trading algorithm.
 
-## Requirements
+---
 
-- GCC or Clang with C++20 (verified: GCC 13.3.0)
+## What Is Implemented
+
+- **Core Domain & Types:** Integer price ticks and quantities; limit-order lifecycle (`New`, `PartiallyFilled`, `Filled`, `Cancelled`, `Rejected`).
+- **Reference Matching Engine:** Limit-order matching, price-time priority, resting-price execution, monotonic trade IDs, $O(L)$ level cancellation.
+- **Pre-Trade Risk & OMS:** Order quantity and position limits, price bands, self-cross prevention, external liquidity, and in-memory monotonic audit log (`EventLog`).
+- **Deterministic Replay:** Exact reconstruction of trades, positions, and audit streams via `MarketReplay` and `OmsReplay`.
+- **Differential Validation:** Randomized submit/cancel testing against an independent reference order book (seed `0xD1FF3E71A1`), verified to 100,000 operations with detailed mismatch diagnostics.
+- **Release Benchmarking:** Dependency-free microbenchmark suite measuring throughput and latency across 8 core workloads.
+- **Offline Research Pipeline:** Walk-forward threshold mean-reversion strategy evaluated against buy-and-hold on **synthetic** top-of-book data.
+
+Market orders, live market data, and universal speedup claims are explicit non-goals.
+
+---
+
+## Documentation and Evidence Links
+
+- [Release Readiness Report](docs/RELEASE_READINESS.md) — Comprehensive audit, verified results, and scaling analysis
+- [Release Verification Record](docs/results/release_verification.txt) — Raw machine-readable verification transcript
+- [System Architecture](docs/ARCHITECTURE.md) — Design, invariants, event flow, and exception guarantees
+- [Feature Status](docs/FEATURE_STATUS.md) — Verification matrix across all project phases
+- [Benchmarking Methodology](docs/BENCHMARKING.md) — Workload specifications, scaling derivation, and raw numbers
+- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — Roadmap status and delivery confirmation
+
+---
+
+## Build Prerequisites
+
+- GCC or Clang with C++20 support (verified on GCC 13.3.0)
 - CMake 3.25+
-- Ninja
+- Ninja build system
 - GoogleTest CMake package (`GTest CONFIG`)
 
-On Ubuntu 24.04 these packages are sufficient (install once; do not build as root):
-
+On Ubuntu 24.04 (do not build as root):
 ```bash
 sudo apt-get install -y g++ cmake ninja-build libgtest-dev
 ```
 
-`./scripts/verify.sh` configures Debug and ASan/UBSan trees itself. Never run
-project commands as root.
+---
 
-## Debug build and tests
+## Verification and Testing
 
+### 1. Canonical Verification Gate
+Runs Debug (97 tests), ASan/UBSan (97 tests), Release (97 tests), and repository hygiene checks:
 ```bash
-cmake -S . -B build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DAPEXHFT_ENABLE_TESTS=ON
+./scripts/verify.sh
+```
+
+### 2. Debug Build and Tests
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DAPEXHFT_ENABLE_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/apexhft
 ```
+*Verified:* **97/97 passed** (0.81s).
 
-Verified in this tree: **97/97** tests passed.
-
-## Sanitizer build
-
+### 3. AddressSanitizer and UndefinedBehaviorSanitizer
 ```bash
-cmake -S . -B build-asan -G Ninja \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DAPEXHFT_ENABLE_TESTS=ON \
-  -DAPEXHFT_ENABLE_SANITIZERS=ON
+cmake -S . -B build-asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DAPEXHFT_ENABLE_TESTS=ON -DAPEXHFT_ENABLE_SANITIZERS=ON
 cmake --build build-asan
 ctest --test-dir build-asan --output-on-failure
 ```
+*Verified:* **97/97 passed** (3.68s, 0 sanitizer defects).
 
-Verified: **97/97** tests passed. Combined gate: `./scripts/verify.sh`
-(also runs `git diff --check`).
+### 4. Release Build and Tests
+```bash
+cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DAPEXHFT_ENABLE_TESTS=ON -DAPEXHFT_ENABLE_BENCHMARKS=ON -DAPEXHFT_ENABLE_SANITIZERS=OFF
+cmake --build build-release
+ctest --test-dir build-release --output-on-failure
+```
+*Verified:* **97/97 passed** (0.47s).
 
-## Randomized differential testing
+---
 
-An independent reference order book validates the matching engine under
-randomized streams of submit and cancel operations (seed `0xD1FF3E71A1`):
+## Randomized Differential Testing
+
+Validates matching engine execution against an independent reference book under randomized submit/cancel operations with fixed seed `0xD1FF3E71A1`:
 
 ```bash
-# Standard 10,000 operation validation
+# Standard 10,000 operation run
 APEXHFT_DIFF_OPS=10000 ./scripts/run_differential.sh
 
-# Extended validation (Release build)
+# Extended 100,000 operation run (Release build)
 APEXHFT_DIFF_BUILD=build-release APEXHFT_DIFF_OPS=100000 ./scripts/run_differential.sh
 ```
+*Status:* **100,000 operations passed** (24.19s). (Note: The 1,000,000 operation test is documented as interrupted due to cumulative $O(N^2)$ price-queue cancellation scaling under concentrated depth; see [RELEASE_READINESS.md](docs/RELEASE_READINESS.md)).
 
-Any discrepancy emits a structured failure trace containing the seed,
-operation count, failing operation index, failure reason, and a replayable sequence.
+---
 
-## Replay
+## Benchmarking
 
-Market replay (`MarketReplay`) and OMS replay (`OmsReplay`) are libraries
-exercised by unit tests:
-
-```bash
-ctest --test-dir build -R 'Replay' --output-on-failure
-```
-
-Identical sequenced inputs produce identical trades, audit sequences, and
-positions. See `include/apexhft/replay.hpp` and `include/apexhft/oms_replay.hpp`.
-
-## Benchmarks
-
-Release only; do not quote sanitizer timings.
-
+Execute the dependency-free Release benchmark suite:
 ```bash
 ./scripts/run_benchmarks.sh
 ```
+- Baseline metrics: `docs/results/phase7_release_baseline.txt`
+- Optimized OMS metrics: `docs/results/phase8_release_optimized.txt` (25.5× speedup on `oms_replay`)
 
-Machine-specific captured output:
+---
 
-- Baseline: `docs/results/phase7_release_baseline.txt`
-- After OMS lookup change: `docs/results/phase8_release_optimized.txt`
-
-Details: `docs/BENCHMARKING.md`.
-
-## Offline research
+## Offline Research Pipeline
 
 ```bash
 cmake --build build --target apexhft_research
@@ -112,24 +123,23 @@ cmake --build build --target apexhft_research
 # or
 ./scripts/run_research.sh
 ```
+*Note:* `data/synthetic_quotes.csv` is labelled **synthetic**. Backtest metrics are deterministic proof of accounting mechanics, not predictive trading edge.
 
-`data/synthetic_quotes.csv` is labelled **synthetic**, not historical
-market data. Schema:
+---
 
+## Interview Demonstration Workflow
+
+To demonstrate the full repository in under 2 minutes from a clean shell:
+```bash
+# 1. Canonical multi-target verification (Debug, ASan, Release)
+./scripts/verify.sh
+
+# 2. Run deterministic differential model comparison (10k ops)
+APEXHFT_DIFF_OPS=10000 ./scripts/run_differential.sh
+
+# 3. Run synthetic research backtest
+./scripts/run_research.sh
+
+# 4. Run Release benchmark suite
+./scripts/run_benchmarks.sh
 ```
-timestamp_ns,bid_ticks,ask_ticks,bid_qty,ask_qty
-```
-
-Unsorted or invalid rows are rejected. Strategy: buy after a mid drop of
-`entry_ticks`, sell after a mid rise while long; fees and slippage are
-integer ticks. Walk-forward selects `entry_ticks` on the first half of the
-file and evaluates the second half. Synthetic PnL is not a trading edge.
-
-## Design notes
-
-- Single-threaded, deterministic, no wall-clock in the engine.
-- Audit logs are outputs; replay commands plus `RiskLimits` are the inputs.
-- Exception safety: rejections before matching leave state unchanged; after
-  a successful match, audit/position failures are not transactional.
-
-See `docs/ARCHITECTURE.md` and `docs/FEATURE_STATUS.md`.

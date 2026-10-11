@@ -1,0 +1,75 @@
+# ApexHFT Release Verification Record
+# Generated: 2026-10-11
+# Environment: Ubuntu 24.04.4 LTS on WSL2 (kernel 6.6.87.2-microsoft-standard-WSL2)
+# Host CPU: 12th Gen Intel(R) Core(TM) i5-1235U
+# Compiler: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+# CMake: 3.28.3 | Ninja: 1.11.1 | CTest: 3.28.3 | Git: 2.43.0
+# Target Revision: master
+
+[CHECK 1] Debug Build and Test Suite
+Command: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DAPEXHFT_ENABLE_TESTS=ON && cmake --build build && ctest --test-dir build --output-on-failure
+Result: PASS
+Total Tests: 97 / 97 passed
+Duration: 0.81s
+
+[CHECK 2] AddressSanitizer and UBSan Build and Test Suite
+Command: cmake -S . -B build-asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DAPEXHFT_ENABLE_TESTS=ON -DAPEXHFT_ENABLE_SANITIZERS=ON && cmake --build build-asan && ctest --test-dir build-asan --output-on-failure
+Result: PASS
+Total Tests: 97 / 97 passed
+Sanitizer Errors: 0
+Duration: 3.68s
+
+[CHECK 3] Release Build and Test Suite
+Command: cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DAPEXHFT_ENABLE_TESTS=ON -DAPEXHFT_ENABLE_BENCHMARKS=ON -DAPEXHFT_ENABLE_SANITIZERS=OFF && cmake --build build-release && ctest --test-dir build-release --output-on-failure
+Result: PASS
+Total Tests: 97 / 97 passed
+Duration: 0.47s
+
+[CHECK 4] Fresh Clean-from-Scratch Build Verification
+Command: cmake -S . -B build-clean-scratch -G Ninja -DCMAKE_BUILD_TYPE=Release -DAPEXHFT_ENABLE_TESTS=ON -DAPEXHFT_ENABLE_BENCHMARKS=ON && cmake --build build-clean-scratch && ctest --test-dir build-clean-scratch --output-on-failure
+Result: PASS
+Total Tests: 97 / 97 passed
+Duration: 0.62s
+
+[CHECK 5] Canonical Script Verification Gate
+Command: ./scripts/verify.sh
+Result: PASS
+Checks: Debug (97/97) + ASan/UBSan (97/97) + Release (97/97) + git diff --check
+Status: Verification completed successfully
+
+[CHECK 6] Deterministic Differential Validation (Reference Model Comparison)
+Command: APEXHFT_DIFF_BUILD=build-release APEXHFT_DIFF_OPS=100000 ./scripts/run_differential.sh
+Seed: 0xD1FF3E71A1
+Operations Verified: 100,000
+Trade Mismatches: 0
+Active Book Invariant Mismatches: 0
+Result: PASS (exit code 0)
+Duration: 24.19s
+
+[CHECK 7] Differential Scalability & 1M Operation Status
+Command: APEXHFT_DIFF_BUILD=build-release APEXHFT_DIFF_OPS=1000000 ./scripts/run_differential.sh
+Status: INTERRUPTED (historical interruption at 20m 29s)
+Bottleneck Analysis:
+- Price queue cancellation uses std::remove on FIFO std::deque (O(L) per cancel).
+- With 21 price levels, resting orders accumulate linearly (L proportional to N).
+- Cumulative cancellation work across batch scales as O(N^2).
+- Harness checks active_order_count() per op (O(N) historical scans), contributing cumulative O(N^2) time.
+- Measured scaling: 10k ops = 0.21s | 20k ops = 0.83s | 40k ops = 4.19s | 80k ops = 18.53s | 100k ops = 24.19s.
+- Projected 1M runtime: ~40-48 minutes.
+
+[CHECK 8] Research Workflow Determinism
+Command: ./build/apexhft_research --csv data/synthetic_quotes.csv
+Input Dataset: data/synthetic_quotes.csv (12 synthetic quotes)
+Output Comparison: Independent runs produce 100% byte-for-byte identical output matching docs/results/research_synthetic.txt
+Result: PASS
+
+[CHECK 9] Standalone Executable Launch
+Command: ./build/apexhft
+Output: ApexHFT 0.1.0
+Result: PASS (exit code 0)
+
+[CHECK 10] Repository Hygiene & Git Diff
+Command: git diff --check && git status --short
+Untracked Artifacts: None
+Secret Leaks: None
+Result: PASS

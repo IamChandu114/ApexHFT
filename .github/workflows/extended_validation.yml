@@ -1,0 +1,40 @@
+name: ApexHFT Extended Differential Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation_count:
+        description: 'Number of differential operations (default 100000)'
+        required: true
+        default: '100000'
+
+permissions:
+  contents: read
+
+jobs:
+  extended-differential-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ cmake ninja-build libgtest-dev
+
+      - name: Build Release tests
+        run: |
+          cmake -S . -B build-release -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DAPEXHFT_ENABLE_TESTS=ON \
+            -DAPEXHFT_ENABLE_SANITIZERS=OFF
+          cmake --build build-release --target apexhft_tests
+
+      - name: Run extended differential validation
+        env:
+          APEXHFT_DIFF_OPS: ${{ github.event.inputs.operation_count || '100000' }}
+          APEXHFT_DIFF_BUILD: build-release
+        run: bash ./scripts/run_differential.sh

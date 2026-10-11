@@ -22,5 +22,13 @@ cmake -S . -B build-asan -G Ninja \
 cmake --build build-asan
 ctest --test-dir build-asan --output-on-failure
 
+cmake -S . -B build-release -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DAPEXHFT_ENABLE_TESTS=ON \
+  -DAPEXHFT_ENABLE_BENCHMARKS=ON \
+  -DAPEXHFT_ENABLE_SANITIZERS=OFF
+cmake --build build-release
+ctest --test-dir build-release --output-on-failure
+
 git diff --check
 echo "Verification completed successfully."

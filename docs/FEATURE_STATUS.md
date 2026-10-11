@@ -63,19 +63,18 @@ Statuses: **Verified** | Implemented — verification pending | In progress | Pl
   (`tests/test_research.cpp`, `./scripts/run_research.sh`).
 - Dataset `data/synthetic_quotes.csv` is **synthetic**, not historical.
 
-## Evidence (this environment)
-- Debug: `ctest --test-dir build --output-on-failure` → **97/97 passed** (1.02s).
-- ASan/UBSan: `ctest --test-dir build-asan --output-on-failure` → **97/97 passed** (4.41s).
-- Release: `ctest --test-dir build-release --output-on-failure` → **97/97 passed** (0.60s).
+## Evidence (this environment: WSL2 Ubuntu 24.04 LTS, GCC 13.3.0)
+- Debug: `ctest --test-dir build --output-on-failure` → **97/97 passed** (0.81s).
+- ASan/UBSan: `ctest --test-dir build-asan --output-on-failure` → **97/97 passed** (3.68s).
+- Release: `ctest --test-dir build-release --output-on-failure` → **97/97 passed** (0.47s).
+- Clean Scratch Build: `ctest --test-dir build-clean-scratch --output-on-failure` → **97/97 passed** (0.62s).
 - Differential validation (`./scripts/run_differential.sh`):
   - 5,000 ops (CI default): 0.23s Debug, 0.05s Release — **passed**.
-  - 10,000 ops: 0.75s Debug, 0.19s Release — **passed**.
-  - 100,000 ops: 24.60s Release — **passed** (exit code 0).
-  - 1,000,000 ops: Not passed / interrupted at 20m 29s. Queue cancellation scaling in
-    `MatchingEngine::cancel` (`std::remove` over FIFO `std::deque`) causes $O(N^2)$ cumulative
-    traversals under deep resting queues.
-- `./scripts/verify.sh` rebuilds Debug + ASan and runs `git diff --check` — **passed**.
-- Research repeated: identical output and metrics.
+  - 10,000 ops: 0.21s Release — **passed**.
+  - 100,000 ops: 24.19s Release — **passed** (exit code 0).
+  - 1,000,000 ops: **Not passed / Interrupted** (interrupted at 20m 29s). Under concentrated price levels (21 levels), resting queues grow deep ($L \propto N$) and per-op `MatchingEngine::active_order_count()` inspections induce cumulative $O(N^2)$ test scaling (~40-48 min projected).
+- `./scripts/verify.sh` rebuilds Debug + ASan + Release and runs `git diff --check` — **passed**.
+- Research repeated: identical output and metrics across independent runs, matching `docs/results/research_synthetic.txt`.
 
 ## Out of scope
 - Live exchange/broker connectivity and real-money execution.

@@ -76,8 +76,19 @@ Same Release binary flags and workloads after the change:
 Matching-engine rows moved with WSL noise; they were not the optimization
 target. The OMS row is the comparable evidence for keeping the change.
 
+## Algorithmic complexity and scaling
+
+- **Per-operation vs Cumulative cost**:
+  - `MatchingEngine::cancel`: Removes an order from a price level's FIFO `std::deque` using `std::remove`. Per-operation complexity is $O(L)$ where $L$ is the queue length at that specific price. It is not universally $O(N)$ unless all $N$ resting orders reside at that single level.
+  - In workloads with concentrated price levels (e.g. 21 discrete levels in differential tests), persistent resting order backlog means $L$ grows with $N$, making cumulative cancellation cost scale quadratically ($O(N^2)$) across large batches.
+  - `MatchingEngine::active_order_count()`: Traverses `orders_` linearly ($O(N)$ historical orders). Calling this per operation in validation harnesses induces cumulative $O(N^2)$ verification overhead.
+- **OMS Optimization**:
+  - Unlocked 25.5× speedup on `oms_replay` by eliminating linear scans over historical orders using `unordered_set` for owned IDs and `active_ids_` for live orders.
+  - Unchanged paths: Reference matching engine logic and cancellation deques were intentionally preserved to maintain verifiable correctness.
+
 ## Limitations
 
-- Results are host-specific and not a latency SLA.
-- Percentiles are not isolated hardware timestamps.
-- `cancel_existing` still scans FIFO deques; it was not modified in Phase 8.
+- Results are host-specific (WSL2 virtualized environment) and not a latency SLA.
+- Percentiles include steady_clock measurement overhead and are noisy below ~100 ns.
+- Never compare Debug or ASan timings with Release measurements.
+- Benchmark numbers reflect deterministic synthetic workloads, not live-market execution.

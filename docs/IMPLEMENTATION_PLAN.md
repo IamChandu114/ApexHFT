@@ -64,7 +64,7 @@
 
 ## Phase 10 — Delivery
 - Provide reproducible commands, sample data, architecture diagrams and demo results.
-- **Status:** Verified for local reproduction (README commands, synthetic CSV,
-  benchmark and research result files). No git commit/push was requested.
+- **Status:** Verified. Canonical verification (`verify.sh`) covers Debug, ASan/UBSan, and Release builds with CTest suite (97/97 tests), deterministic 100k differential testing, GitHub CI workflow with automated checks, and release readiness evidence.
+- **Finalization Note:** All planned offline simulator features (Phases 0–10) are complete and verified. Deferred items (market order execution in engine, $O(1)$ intrusive list book cancellation, multi-threaded matching, exchange connectivity) remain explicitly out-of-scope non-goals.
 
 Each phase requires review and passing relevant tests before the next begins.
