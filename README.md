@@ -128,7 +128,7 @@ cmake --build build --target apexhft_research
 
 ---
 
-## Interview Demonstration Workflow
+## Demonstration Workflow
 
 To demonstrate the full repository in under 2 minutes from a clean shell:
 ```bash
