@@ -1,4 +1,5 @@
-# ApexHFT
+# ApexHFT- Deterministic C++20 Trading-System Simulator | Matching Engine, Risk Controls & Differential Testing
+ 
 
 [![ApexHFT CI](https://github.com/IamChandu114/ApexHFT/actions/workflows/ci.yml/badge.svg)](https://github.com/IamChandu114/ApexHFT/actions/workflows/ci.yml)
 
